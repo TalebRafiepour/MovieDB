@@ -1,9 +1,11 @@
-package com.taleb.moviedb
+package com.taleb.moviedb.mvp
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.taleb.moviedb.R
+import com.taleb.moviedb.Result
 import kotlinx.android.synthetic.main.movie_model_layout.view.*
 
 class MoviesAdapter(private val movieList: List<Result>) :RecyclerView.Adapter<MoviesAdapter.MovieViewHolder>() {
