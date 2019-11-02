@@ -1,32 +1,37 @@
-package com.taleb.moviedb.mvp
+package com.taleb.moviedb.features
 
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.jakewharton.rxbinding2.widget.RxTextView
 import com.taleb.moviedb.R
-import com.taleb.moviedb.Result
+import com.taleb.moviedb.base.ViewModelFactory
+import com.taleb.moviedb.pojo.Result
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.concurrent.TimeUnit
 
-class MainActivity : AppCompatActivity(), MovieContract.View {
+class MainActivity : AppCompatActivity() {
 
     private var disposable = CompositeDisposable()
     private lateinit var movieRecyclerAdapter: MoviesAdapter
-    private lateinit var moviesList: List<Result>
-    private lateinit var presenter: MovieContract.Presenter
+    private var moviesList: ArrayList<Result> = arrayListOf()
+    private lateinit var viewModel: MovieViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setupRecyclerView()
-        presenter = MoviePresenter(this)
+        //viewModelFactory to pass the dataRepository to viewModel
+
+        viewModel = ViewModelProvider(this,ViewModelFactory()).get(MovieViewModel::class.java)
 
         disposable.add(RxTextView
             .textChanges(searchEditText)
@@ -34,32 +39,41 @@ class MainActivity : AppCompatActivity(), MovieContract.View {
             .debounce(1, TimeUnit.SECONDS)
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                presenter.getMoviesContain(it.toString())
+                loading(true)
+                getMovie(it.toString())
             }, {
                 Log.e("MYTAG", "onError : ${it.message}")
             })
         )
     }
 
-    override fun setupRecyclerView() {
-        moviesList = emptyList()
-        movieRecyclerAdapter = MoviesAdapter(moviesList)
-        moveRecyclerView.adapter = movieRecyclerAdapter
-        moveRecyclerView.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
+    private fun getMovie(title :String){
+        viewModel.getMoviesContain(title).observe(this, Observer {
+            loading(false)
+            setMoviesList(it.results)
+        })
     }
 
-    override fun setMoviesList(list: List<Result>) {
-        moviesList = list
+
+    private fun setupRecyclerView() {
+        movieRecyclerAdapter = MoviesAdapter(moviesList)
+        movieRecyclerView.adapter = movieRecyclerAdapter
+        movieRecyclerView.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
+    }
+
+    private fun setMoviesList(list: List<Result>) {
+        moviesList.clear()
+        moviesList.addAll(list)
         movieRecyclerAdapter.notifyDataSetChanged()
     }
 
-    override fun loading(show: Boolean) {
+    private fun loading(show: Boolean) {
         if (show)
             movieProgressBar.visibility = View.VISIBLE
         else movieProgressBar.visibility = View.GONE
     }
 
-    override fun showToast(message: String) {
+    private fun showToast(message: String) {
         Toast.makeText(this,message,Toast.LENGTH_LONG).show()
     }
 
@@ -67,6 +81,5 @@ class MainActivity : AppCompatActivity(), MovieContract.View {
     override fun onDestroy() {
         super.onDestroy()
         disposable.clear()
-        presenter.onDestroy()
     }
 }

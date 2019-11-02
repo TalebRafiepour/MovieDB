@@ -1,11 +1,11 @@
-package com.taleb.moviedb.mvp
+package com.taleb.moviedb.features
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.taleb.moviedb.R
-import com.taleb.moviedb.Result
+import com.taleb.moviedb.pojo.Result
 import kotlinx.android.synthetic.main.movie_model_layout.view.*
 
 class MoviesAdapter(private val movieList: List<Result>) :RecyclerView.Adapter<MoviesAdapter.MovieViewHolder>() {
@@ -15,7 +15,7 @@ class MoviesAdapter(private val movieList: List<Result>) :RecyclerView.Adapter<M
         return MovieViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.movie_model_layout,parent,false))
     }
 
-    override fun getItemCount(): Int = movieList.size
+    override fun getItemCount(): Int =  movieList.size
 
     override fun onBindViewHolder(holder: MovieViewHolder, position: Int) {
         holder.onBind(movieList[position])
